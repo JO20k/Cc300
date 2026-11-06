@@ -1,0 +1,182 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidCurrency(c) {
+      return c is string && (c == 'TON' || c == 'USDT' || c == 'BTC');
+    }
+
+    function isValidPlayerProfile(data, userId) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId == userId &&
+             data.username is string && data.username.size() >= 2 && data.username.size() <= 40 &&
+             data.tonBalance is number && data.tonBalance >= 0 && data.tonBalance <= 1000000000 &&
+             data.usdtBalance is number && data.usdtBalance >= 0 && data.usdtBalance <= 1000000000 &&
+             data.btcBalance is number && data.btcBalance >= 0 && data.btcBalance <= 1000000000 &&
+             isValidCurrency(data.activeCurrency) &&
+             data.totalWagered is number && data.totalWagered >= 0 && data.totalWagered <= 1000000000 &&
+             data.totalWon is number && data.totalWon >= 0 && data.totalWon <= 1000000000 &&
+             data.gamesPlayed is int && data.gamesPlayed >= 0 && data.gamesPlayed <= 100000000 &&
+             data.vipLevel is int && data.vipLevel >= 1 && data.vipLevel <= 10 &&
+             data.botChatId is string && data.botChatId.size() <= 64 &&
+             data.serverSeedHash is string && data.serverSeedHash.size() >= 8 && data.serverSeedHash.size() <= 128 &&
+             data.clientSeed is string && data.clientSeed.size() >= 1 && data.clientSeed.size() <= 64 &&
+             data.nonce is int && data.nonce >= 0 && data.nonce <= 100000000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidBotChatMessage(data, userId) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId == userId &&
+             data.sender is string && (data.sender == 'USER' || data.sender == 'BOT') &&
+             data.commandOrText is string && data.commandOrText.size() >= 1 && data.commandOrText.size() <= 1000 &&
+             data.gameType is string && (
+               data.gameType == 'NONE' ||
+               data.gameType == 'BLACKJACK' ||
+               data.gameType == 'SLOTS' ||
+               data.gameType == 'ROULETTE' ||
+               data.gameType == 'EMOJI_DICE' ||
+               data.gameType == 'EMOJI_DARTS' ||
+               data.gameType == 'EMOJI_BOWLING' ||
+               data.gameType == 'EMOJI_BASKETBALL' ||
+               data.gameType == 'EMOJI_FOOTBALL' ||
+               data.gameType == 'WALLET'
+             ) &&
+             data.emojiSymbol is string && data.emojiSymbol.size() <= 32 &&
+             data.emojiValue is int && data.emojiValue >= 0 && data.emojiValue <= 64 &&
+             data.betAmount is number && data.betAmount >= 0 && data.betAmount <= 100000000 &&
+             data.payoutAmount is number && data.payoutAmount >= 0 && data.payoutAmount <= 100000000 &&
+             isValidCurrency(data.currency) &&
+             data.outcome is string && (
+               data.outcome == 'INFO' ||
+               data.outcome == 'WIN' ||
+               data.outcome == 'LOSS' ||
+               data.outcome == 'PUSH' ||
+               data.outcome == 'JACKPOT' ||
+               data.outcome == 'ACTIVE'
+             ) &&
+             data.metadataSummary is string && data.metadataSummary.size() <= 500 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidCryptoTransaction(data, userId) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId == userId &&
+             data.txType is string && (
+               data.txType == 'DEPOSIT' ||
+               data.txType == 'WITHDRAW' ||
+               data.txType == 'FAUCET' ||
+               data.txType == 'BET_WIN' ||
+               data.txType == 'BET_LOSS' ||
+               data.txType == 'SWAP'
+             ) &&
+             isValidCurrency(data.currency) &&
+             data.amount is number && data.amount >= 0 && data.amount <= 100000000 &&
+             data.txHash is string && data.txHash.size() >= 4 && data.txHash.size() <= 128 &&
+             data.addressOrNote is string && data.addressOrNote.size() >= 1 && data.addressOrNote.size() <= 200 &&
+             data.status is string && (data.status == 'CONFIRMED' || data.status == 'COMPLETED') &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if isSignedIn() && request.auth.uid == userId && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll([
+                         'userId', 'username', 'tonBalance', 'usdtBalance', 'btcBalance',
+                         'activeCurrency', 'totalWagered', 'totalWon', 'gamesPlayed',
+                         'vipLevel', 'botChatId', 'serverSeedHash', 'clientSeed', 'nonce',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'username', 'tonBalance', 'usdtBalance', 'btcBalance',
+                         'activeCurrency', 'totalWagered', 'totalWon', 'gamesPlayed',
+                         'vipLevel', 'botChatId', 'serverSeedHash', 'clientSeed', 'nonce',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidPlayerProfile(incoming(), userId);
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       isValidPlayerProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'username', 'tonBalance', 'usdtBalance', 'btcBalance',
+                         'activeCurrency', 'totalWagered', 'totalWon', 'gamesPlayed',
+                         'vipLevel', 'botChatId', 'serverSeedHash', 'clientSeed', 'nonce',
+                         'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+
+      match /messages/{messageId} {
+        allow get: if isSignedIn() && isValidId(userId) && isValidId(messageId) && request.auth.uid == userId && existing().userId == request.auth.uid;
+        allow list: if isSignedIn() && request.auth.uid == userId && existing().userId == request.auth.uid;
+
+        allow create: if isSignedIn() &&
+                         isValidId(userId) &&
+                         isValidId(messageId) &&
+                         request.auth.uid == userId &&
+                         incoming().keys().hasAll([
+                           'userId', 'sender', 'commandOrText', 'gameType', 'emojiSymbol',
+                           'emojiValue', 'betAmount', 'payoutAmount', 'currency',
+                           'outcome', 'metadataSummary', 'createdAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'sender', 'commandOrText', 'gameType', 'emojiSymbol',
+                           'emojiValue', 'betAmount', 'payoutAmount', 'currency',
+                           'outcome', 'metadataSummary', 'createdAt'
+                         ]) &&
+                         isValidBotChatMessage(incoming(), userId);
+
+        allow update: if false;
+        allow delete: if isSignedIn() && isValidId(userId) && isValidId(messageId) && request.auth.uid == userId && existing().userId == request.auth.uid;
+      }
+
+      match /transactions/{txId} {
+        allow get: if isSignedIn() && isValidId(userId) && isValidId(txId) && request.auth.uid == userId && existing().userId == request.auth.uid;
+        allow list: if isSignedIn() && request.auth.uid == userId && existing().userId == request.auth.uid;
+
+        allow create: if isSignedIn() &&
+                         isValidId(userId) &&
+                         isValidId(txId) &&
+                         request.auth.uid == userId &&
+                         incoming().keys().hasAll([
+                           'userId', 'txType', 'currency', 'amount',
+                           'txHash', 'addressOrNote', 'status', 'createdAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'txType', 'currency', 'amount',
+                           'txHash', 'addressOrNote', 'status', 'createdAt'
+                         ]) &&
+                         isValidCryptoTransaction(incoming(), userId);
+
+        allow update, delete: if false;
+      }
+    }
+  }
+}

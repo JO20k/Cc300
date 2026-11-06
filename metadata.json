@@ -1,0 +1,6 @@
+{
+  "name": "TeleVegas Bot",
+  "description": "Telegram casino bot simulator and live Bot API controller featuring in-chat emoji games, Blackjack, Slots, Roulette, and a crypto wallet ledger.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

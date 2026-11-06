@@ -1,0 +1,248 @@
+{
+  "entities": {
+    "PlayerProfile": {
+      "title": "PlayerProfile",
+      "description": "User casino wallet balances, provably fair seeds, VIP tier, and Telegram bot configuration.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID matching request.auth.uid."
+        },
+        "username": {
+          "type": "string",
+          "description": "Telegram handle or display name."
+        },
+        "tonBalance": {
+          "type": "number",
+          "description": "TON cryptocurrency balance."
+        },
+        "usdtBalance": {
+          "type": "number",
+          "description": "USDT cryptocurrency balance."
+        },
+        "btcBalance": {
+          "type": "number",
+          "description": "BTC cryptocurrency balance."
+        },
+        "activeCurrency": {
+          "type": "string",
+          "enum": ["TON", "USDT", "BTC"],
+          "description": "Currently selected betting currency."
+        },
+        "totalWagered": {
+          "type": "number",
+          "description": "Cumulative amount wagered in USD equivalent."
+        },
+        "totalWon": {
+          "type": "number",
+          "description": "Cumulative amount won in USD equivalent."
+        },
+        "gamesPlayed": {
+          "type": "integer",
+          "description": "Total number of casino and emoji games played."
+        },
+        "vipLevel": {
+          "type": "integer",
+          "description": "VIP tier level (1 to 10)."
+        },
+        "botChatId": {
+          "type": "string",
+          "description": "Optional live Telegram chat_id for broadcasting bot messages."
+        },
+        "serverSeedHash": {
+          "type": "string",
+          "description": "SHA-256 hash of active provably fair server seed."
+        },
+        "clientSeed": {
+          "type": "string",
+          "description": "User-configurable client seed for provably fair verification."
+        },
+        "nonce": {
+          "type": "integer",
+          "description": "Current provably fair bet nonce."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when profile was created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when profile was last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "username",
+        "tonBalance",
+        "usdtBalance",
+        "btcBalance",
+        "activeCurrency",
+        "totalWagered",
+        "totalWon",
+        "gamesPlayed",
+        "vipLevel",
+        "botChatId",
+        "serverSeedHash",
+        "clientSeed",
+        "nonce",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BotChatMessage": {
+      "title": "BotChatMessage",
+      "description": "In-chat Telegram casino bot message or emoji game result.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID matching request.auth.uid."
+        },
+        "sender": {
+          "type": "string",
+          "enum": ["USER", "BOT"],
+          "description": "Message author type."
+        },
+        "commandOrText": {
+          "type": "string",
+          "description": "Telegram bot command or formatted message body."
+        },
+        "gameType": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "BLACKJACK",
+            "SLOTS",
+            "ROULETTE",
+            "EMOJI_DICE",
+            "EMOJI_DARTS",
+            "EMOJI_BOWLING",
+            "EMOJI_BASKETBALL",
+            "EMOJI_FOOTBALL",
+            "WALLET"
+          ],
+          "description": "Associated casino or Telegram emoji game type."
+        },
+        "emojiSymbol": {
+          "type": "string",
+          "description": "Telegram animated emoji symbol or game icon."
+        },
+        "emojiValue": {
+          "type": "integer",
+          "description": "Telegram dice/slot value (1-6 for dice/darts/bowling, 1-5 for basketball/football, 1-64 for slots, 0 for none)."
+        },
+        "betAmount": {
+          "type": "number",
+          "description": "Wagered crypto amount."
+        },
+        "payoutAmount": {
+          "type": "number",
+          "description": "Total payout crypto amount."
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["TON", "USDT", "BTC"],
+          "description": "Cryptocurrency used for the bet."
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["INFO", "WIN", "LOSS", "PUSH", "JACKPOT", "ACTIVE"],
+          "description": "Outcome state of the message or game."
+        },
+        "metadataSummary": {
+          "type": "string",
+          "description": "Summary of cards, reels, roulette pocket, or provably fair hash."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "sender",
+        "commandOrText",
+        "gameType",
+        "emojiSymbol",
+        "emojiValue",
+        "betAmount",
+        "payoutAmount",
+        "currency",
+        "outcome",
+        "metadataSummary",
+        "createdAt"
+      ]
+    },
+    "CryptoTransaction": {
+      "title": "CryptoTransaction",
+      "description": "Cryptocurrency ledger record for deposits, withdrawals, faucet claims, swaps, and game settlements.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID matching request.auth.uid."
+        },
+        "txType": {
+          "type": "string",
+          "enum": ["DEPOSIT", "WITHDRAW", "FAUCET", "BET_WIN", "BET_LOSS", "SWAP"],
+          "description": "Type of crypto wallet transaction."
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["TON", "USDT", "BTC"],
+          "description": "Cryptocurrency symbol."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Transaction amount."
+        },
+        "txHash": {
+          "type": "string",
+          "description": "Blockchain transaction hash or provably fair round hash."
+        },
+        "addressOrNote": {
+          "type": "string",
+          "description": "Destination/source wallet address or game round summary."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["CONFIRMED", "COMPLETED"],
+          "description": "Settlement status."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "txType",
+        "currency",
+        "amount",
+        "txHash",
+        "addressOrNote",
+        "status",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/PlayerProfile" },
+      "description": "Per-user casino wallet profile, balances, and provably fair seeds."
+    },
+    "/users/{userId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/BotChatMessage" },
+      "description": "Per-user Telegram casino bot chat history and emoji game results."
+    },
+    "/users/{userId}/transactions/{txId}": {
+      "schema": { "$ref": "#/entities/CryptoTransaction" },
+      "description": "Per-user cryptocurrency wallet ledger transactions."
+    }
+  }
+}

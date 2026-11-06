@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">TeleVegas Bot</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="cd_hero_banner">TeleVegas Casino Bot Hero Banner</string>
+    <string name="cd_sign_out">Sign out</string>
+    <string name="cd_bot_settings">Configure Live Telegram Bot</string>
+    <string name="cd_poll_telegram">Poll Live Telegram Updates</string>
+    <string name="cd_clear_chat">Clear Bot Chat History</string>
+    <string name="cd_send_command">Send Bot Command</string>
+    <string name="tab_bot_chat">Bot &amp; Emoji</string>
+    <string name="tab_blackjack">Blackjack</string>
+    <string name="tab_slots">Slots</string>
+    <string name="tab_roulette">Roulette</string>
+    <string name="tab_wallet">Crypto Vault</string>
+    <string name="cd_ai_pit_boss">Ask Gemini AI Pit Boss</string>
+    <string name="cd_dismiss_ai">Dismiss AI Advice</string>
+</resources>
